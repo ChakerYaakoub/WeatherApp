@@ -80,10 +80,7 @@ The project uses several key dependencies:
 ## Screenshot
 
 <p align="center">
-
-&nbsp;&nbsp;&nbsp;&nbsp;
-<img src="image.png" width="200" alt="Weather Details">
-
+    <img src="image.png" width="200" alt="Weather Details" style="margin: auto">
 </p>
 
 ## License
