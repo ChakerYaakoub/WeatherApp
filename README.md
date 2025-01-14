@@ -82,7 +82,7 @@ The project uses several key dependencies:
     <img src="imagesReadMe/image1.jpg" width="200" alt="Weather Details 1" style="margin: auto; display: block; margin-top: 10px; margin-bottom: 10px;">
 </p>
 
-<hr width="50%"/>
+<hr width="50%" style="margin: auto;"/>
 
 <p align="center">
 <em>Main Weather Screen 2</em>
@@ -91,7 +91,7 @@ The project uses several key dependencies:
     <img src="imagesReadMe/image2.jpg" width="200" alt="Weather Details" style="margin: auto; display: block; margin-top: 10px; margin-bottom: 10px;">
 </p>
 
-<hr width="50%"/>
+<hr width="50%" style="margin: auto;"/>
 
 <p align="center">
 <em>Favorites</em>
