@@ -76,13 +76,22 @@ The project uses several key dependencies:
 ## Screenshots
 
 <p align="center">
-    <img src="imagesReadMe/image1.jpg" width="200" alt="Weather Details 1 " style="margin: auto">
+<em>Main Weather Screen 1</em>
+    <img src="imagesReadMe/image1.jpg" width="200" alt="Weather Details 1" style="margin: auto">
+    <br>
+    
 </p>
 <p align="center">
+<em>Main Weather Screen 2</em>
     <img src="imagesReadMe/image2.jpg" width="200" alt="Weather Details" style="margin: auto">
+    <br>
+   
 </p>
 <p align="center">
+<em>Favorites </em>
     <img src="imagesReadMe/image3.jpg" width="200" alt="Weather Details" style="margin: auto">
+    <br>
+    
 </p>
 
 ## License
