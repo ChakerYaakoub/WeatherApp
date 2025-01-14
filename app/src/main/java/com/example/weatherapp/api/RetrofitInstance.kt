@@ -103,6 +103,23 @@ object RetrofitInstance {
         geocodingRetrofit.create(GeocodingApi::class.java)
     }
 
+    val nominatimApi: NominatimService by lazy {
+        Retrofit.Builder()
+            .baseUrl("https://nominatim.openstreetmap.org/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .client(OkHttpClient.Builder()
+                .addInterceptor { chain ->
+                    val original = chain.request()
+                    val request = original.newBuilder()
+                        .header("User-Agent", "WeatherApp")  // Required by Nominatim
+                        .build()
+                    chain.proceed(request)
+                }
+                .build())
+            .build()
+            .create(NominatimService::class.java)
+    }
+
     private fun hasNetwork(context: Context): Boolean {
         return try {
             val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager

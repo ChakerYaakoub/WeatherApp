@@ -28,6 +28,8 @@ import com.example.weatherapp.components.CurrentWeatherCard
 import com.example.weatherapp.components.FavoriteWeatherCard
 import com.example.weatherapp.components.SearchResultsOverlay
 import android.util.Log
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.LocationOn
 
 @Composable
 fun WeatherPage(
@@ -41,6 +43,7 @@ fun WeatherPage(
     val favoritesWeather = viewModel.favoritesWeather.observeAsState(initial = emptyMap())
     val currentLocationName = viewModel.currentLocationName.observeAsState(initial = "Loading...")
     var selectedDayIndex by remember { mutableStateOf(0) }
+    val isCurrentLocation = viewModel.isCurrentLocation.observeAsState(initial = true)
 
     LaunchedEffect(Unit) {
         viewModel.getCurrentLocationWeather()
@@ -73,7 +76,7 @@ fun WeatherPage(
                             .verticalScroll(rememberScrollState())
                     ) {
                         CurrentWeatherCard(
-                            locationName = currentLocationName.value,
+                            locationName = viewModel.currentLocationName.value ?: "",
                             weather = result.data,
                             isFavorite = favorites.value.any { it.name == currentLocationName.value },
                             onToggleFavorite = {
@@ -82,7 +85,7 @@ fun WeatherPage(
                                     name = currentLocationName.value,
                                     latitude = result.data.latitude,
                                     longitude = result.data.longitude,
-                                    country = "France", // You might want to get this from API
+                                    country = "", // You might want to get this from API
                                     admin1 = null,
                                     admin2 = null,
                                     elevation = result.data.elevation ?: 0.0
@@ -96,7 +99,8 @@ fun WeatherPage(
                             selectedDayIndex = selectedDayIndex,
                             onDaySelected = { newIndex ->
                                 selectedDayIndex = newIndex
-                            }
+                            },
+                            isCurrentLocation = isCurrentLocation.value
                         )
 
                         // Favorites section
@@ -107,11 +111,35 @@ fun WeatherPage(
                         )
 
                         if (favorites.value.isEmpty()) {
-                            Text(
-                                text = "No favorite locations added yet",
-                                modifier = Modifier.padding(horizontal = 16.dp),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 32.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.LocationOn,
+                                    contentDescription = "No favorites",
+                                    modifier = Modifier
+                                        .size(40.dp) // Reduced size
+                                        .padding(bottom = 8.dp),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                                )
+
+                                Text(
+                                    text = "No favorite locations yet",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    textAlign = TextAlign.Center
+                                )
+                                Text(
+                                    text = "Search for a city and add it to favorites",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.padding(top = 4.dp)
+                                )
+                            }
                         } else {
                             favorites.value.forEach { favorite ->
                                 FavoriteWeatherCard(

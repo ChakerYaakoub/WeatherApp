@@ -34,7 +34,8 @@ fun CurrentWeatherCard(
     isFavorite: Boolean,
     onToggleFavorite: () -> Unit,
     selectedDayIndex: Int = 0,
-    onDaySelected: (Int) -> Unit
+    onDaySelected: (Int) -> Unit,
+    isCurrentLocation: Boolean = false
 ) {
     val dayOffset = selectedDayIndex * 24
     val dayEndOffset = dayOffset + 24
@@ -80,52 +81,55 @@ fun CurrentWeatherCard(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Location and Favorite Button
+            // Favorite button in top right
             Box(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(end = 8.dp)
             ) {
-                // Centered city and date
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = locationName,
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        textAlign = TextAlign.Center
-                    )
-                    if (selectedDayIndex == 0) {
-                        Text(
-                            text = getCurrentTime(),
-                            fontSize = 16.sp,
-                            color = Color.White,
-                            textAlign = TextAlign.Center
-                        )
-                    } else {
-                        Text(
-                            text = selectedDate,
-                            fontSize = 16.sp,
-                            color = Color.White,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                }
-
-                // Favorite button in top right corner
                 IconButton(
                     onClick = onToggleFavorite,
-                    modifier = Modifier.align(Alignment.TopEnd)
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .size(48.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+                            shape = RoundedCornerShape(12.dp)
+                        )
                 ) {
                     Icon(
                         imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                         contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
-                        tint = Color.White
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
                     )
                 }
+            }
+
+            // City name centered
+            AutoSizeText(
+                text = locationName.takeIf { it.isNotBlank() } ?: "Loading location..."
+            )
+
+            // Current Location or Date indicator
+            if (isCurrentLocation || selectedDayIndex != 0) {
+                Text(
+                    text = if (isCurrentLocation) "Current Location" 
+                           else selectedDate,
+                    fontSize = 14.sp,
+                    color = Color.White.copy(alpha = 0.8f),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(top = 4.dp, bottom = 4.dp)
+                )
+            }
+
+            if (selectedDayIndex == 0) {
+                Text(
+                    text = getCurrentTime(),
+                    fontSize = 16.sp,
+                    color = Color.White,
+                    textAlign = TextAlign.Center
+                )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -195,6 +199,36 @@ fun CurrentWeatherCard(
                 }
             }
 
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Weather Details (Humidity and Wind)
+            Row(
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // Humidity
+                WeatherDetailRow(
+                    icon = "💧",
+                    value = "${currentHumidity ?: "--"}%",
+                    label = "Humidity"
+                )
+
+                // Wind Speed
+                val currentWindSpeed = try {
+                    weather.hourly.wind_speed_10m
+                        .subList(dayOffset, dayEndOffset)
+                        .firstOrNull()
+                } catch (e: Exception) {
+                    null
+                }
+                
+                WeatherDetailRow(
+                    icon = "🌬️",
+                    value = "${currentWindSpeed?.toInt() ?: "--"} km/h",
+                    label = "Wind Speed"
+                )
+            }
+
             Spacer(modifier = Modifier.height(24.dp))
 
             // Hourly forecast for selected day
@@ -229,7 +263,7 @@ private fun getWeatherDescription(humidity: Int): String {
 
 private fun getWeatherEmoji(humidity: Int): String {
     return when {
-        humidity > 80 -> "🌧️"
+        humidity > 80 -> "🌧🌧️"
         humidity > 60 -> "☁️"
         else -> "☀️"
     }
@@ -444,4 +478,66 @@ private fun DailyWeatherItem(
             )
         }
     }
+}
+
+@Composable
+private fun WeatherDetailRow(
+    icon: String,
+    value: String,
+    label: String,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = icon,
+            fontSize = 20.sp
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Column {
+            Text(
+                text = value,
+                fontSize = 16.sp,
+                color = Color.White,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = label,
+                fontSize = 14.sp,
+                color = Color.White.copy(alpha = 0.7f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun AutoSizeText(
+    text: String,
+    modifier: Modifier = Modifier,
+    color: Color = Color.White
+) {
+    var fontSize by remember { mutableStateOf(28.sp) }
+    var readyToDraw by remember { mutableStateOf(false) }
+
+    Text(
+        text = text,
+        fontSize = fontSize,
+        fontWeight = FontWeight.Bold,
+        color = color,
+        textAlign = TextAlign.Center,
+        maxLines = 1,
+        overflow = TextOverflow.Visible,
+        onTextLayout = { textLayoutResult ->
+            if (!readyToDraw && textLayoutResult.hasVisualOverflow) {
+                fontSize *= 0.9f
+            } else {
+                readyToDraw = true
+            }
+        },
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 48.dp, vertical = 4.dp)
+    )
 } 

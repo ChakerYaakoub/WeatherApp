@@ -9,6 +9,7 @@ import com.example.weatherapp.api.NetworkResult
 import com.example.weatherapp.api.OpenMeteoResponse
 import com.example.weatherapp.api.RetrofitInstance
 import com.example.weatherapp.api.GeocodingResult
+import com.example.weatherapp.api.NominatimResponse
 import com.example.weatherapp.model.FavoriteCity
 import com.example.weatherapp.model.CachedWeather
 import com.example.weatherapp.data.WeatherDao
@@ -43,6 +44,9 @@ class WeatherViewModel(
 
     private val _currentLocationName = MutableLiveData<String>()
     val currentLocationName: LiveData<String> = _currentLocationName
+
+    private val _isCurrentLocation = MutableLiveData<Boolean>(true)
+    val isCurrentLocation: LiveData<Boolean> = _isCurrentLocation
 
     init {
         // Load favorites from database when ViewModel is created
@@ -165,7 +169,7 @@ class WeatherViewModel(
         viewModelScope.launch {
             try {
                 _weatherData.value = NetworkResult.Loading
-                // Update location name
+                _isCurrentLocation.value = false
                 _currentLocationName.value = buildString {
                     append(location.name)
                     location.admin1?.let { append(", $it") }
@@ -182,29 +186,65 @@ class WeatherViewModel(
         }
     }
 
+    private fun formatLocationName(nominatimResponse: NominatimResponse): String {
+        return with(nominatimResponse) {
+            val cityName = with(address) {
+                city ?: town ?: village ?: county ?: state ?: country ?: "Unknown Location"
+            }
+            
+            // Build location string with additional context if available
+            buildString {
+                append(cityName)
+                
+                // Create a list of additional location parts
+                val additionalParts = mutableListOf<String>()
+                
+                // Add state if available and different from city
+                address.state?.takeIf { 
+                    it.isNotBlank() && !cityName.contains(it, ignoreCase = true)
+                }?.let { state ->
+                    additionalParts.add(state)
+                }
+                
+                // Add country if available and different from state and city
+                address.country?.takeIf { 
+                    it.isNotBlank() && 
+                    !cityName.contains(it, ignoreCase = true) && 
+                    !additionalParts.any { part -> part.contains(it, ignoreCase = true) }
+                }?.let { country ->
+                    additionalParts.add(country)
+                }
+                
+                // Join all parts with commas
+                if (additionalParts.isNotEmpty()) {
+                    append(", ")
+                    append(additionalParts.joinToString(", "))
+                }
+            }
+        }
+    }
+
+    private val Boolean?.isTrue: Boolean
+        get() = this == true
+
     fun getCurrentLocationWeather() {
         viewModelScope.launch {
             try {
                 _weatherData.value = NetworkResult.Loading
+                _isCurrentLocation.value = true
                 val location = locationManager.getCurrentLocation()
                 
                 if (location != null) {
-                    // Get location name using reverse geocoding
+                    // Get location name using Nominatim
                     try {
-                        val geocodingResult = RetrofitInstance.geocodingApi.reverseGeocode(
+                        val nominatimResponse = RetrofitInstance.nominatimApi.reverseGeocode(
                             latitude = location.latitude,
-                            longitude = location.longitude,
-                            language = "en",
-                            format = "json"
+                            longitude = location.longitude
                         )
                         
-                        // Update location name
-                        _currentLocationName.value = geocodingResult.results?.firstOrNull()?.let { result ->
-                            buildString {
-                                append(result.name)
-                                result.admin1?.let { admin -> append(", $admin") }
-                            }
-                        } ?: "Unknown Location"
+                        // Format the location name
+                        _currentLocationName.value = formatLocationName(nominatimResponse)
+                        
                     } catch (e: Exception) {
                         Log.e("WeatherViewModel", "Error getting location name", e)
                         _currentLocationName.value = "Current Location"
@@ -225,11 +265,11 @@ class WeatherViewModel(
                     ))
                 } else {
                     _currentLocationName.value = "Location Unavailable"
-                    // ... rest of the error handling code ...
+                    _weatherData.value = NetworkResult.Error("Could not get location")
                 }
             } catch (e: Exception) {
                 _currentLocationName.value = "Error Loading Location"
-                // ... rest of the error handling code ...
+                _weatherData.value = NetworkResult.Error(e.message ?: "Unknown error occurred")
             }
         }
     }
