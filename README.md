@@ -77,10 +77,16 @@ The project uses several key dependencies:
 - Jetpack Compose
 - Material Design Components
 
-## Screenshot
+## Screenshots
 
 <p align="center">
-    <img src="image.png" width="200" alt="Weather Details" style="margin: auto">
+    <img src="imagesReadMe/image1.jpg" width="200" alt="Weather Details 1 " style="margin: auto">
+</p>
+<p align="center">
+    <img src="imagesReadMe/image2.jpg" width="200" alt="Weather Details" style="margin: auto">
+</p>
+<p align="center">
+    <img src="imagesReadMe/image3.jpg" width="200" alt="Weather Details" style="margin: auto">
 </p>
 
 ## License
