@@ -1,9 +1,5 @@
 # Weather App
 
-<p align="center">
-  <img src="app/src/main/res/drawable/app_banner.png" width="200" alt="Weather App Logo">
-</p>
-
 A modern Android weather application that allows users to check weather conditions for different cities and manage their favorite locations.
 
 ## Features
